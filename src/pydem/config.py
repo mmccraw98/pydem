@@ -1,14 +1,24 @@
 import taichi as ti
+import numpy as np
 import platform
 
-# Select GPU backend
-arch = ti.metal if platform.system() == "Darwin" else ti.cuda
-ti.init(arch=arch)
+# Select backend
+# ti.init(arch=ti.metal)
+# ti.init(arch=ti.cuda)
+ti.init(arch=ti.cpu)
 print("taichi:", ti.__version__)
 
 # Define common types
-dtype_float = ti.float32
 dtype_int = ti.int32
+dtype_int_np = np.int32
+
+prec = 64
+if prec == 32:
+    dtype_float = ti.float32
+    dtype_float_np = np.float32
+elif prec == 64:
+    dtype_float = ti.float64
+    dtype_float_np = np.float64
 
 vec2_int = ti.types.vector(2, dtype_int)
 vec2_float = ti.types.vector(2, dtype_float)

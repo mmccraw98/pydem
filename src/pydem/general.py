@@ -2,7 +2,7 @@ import taichi as ti
 from .config import dtype_int, ndarray_1d_int
 
 @ti.kernel
-def sum1d_i32(
+def sum1d_int(
     a: ndarray_1d_int,
     total: ti.template()):
     total[None] = ti.cast(0, total.dtype)
@@ -10,7 +10,7 @@ def sum1d_i32(
         total[None] += a[i]
 
 @ti.kernel
-def exclusive_scan_i32(
+def exclusive_scan_int(
     a: ndarray_1d_int,
     out: ndarray_1d_int,
     tmp: ndarray_1d_int):

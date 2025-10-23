@@ -1,14 +1,14 @@
 import taichi as ti
 
 from .config import dtype_int, dtype_float, ndarray_2d_float, ndarray_1d_int, vec2_float, vec2_int
-from .general import sum1d_i32, exclusive_scan_i32
+from .general import sum1d_int, exclusive_scan_int
 
 def init_neighbor_arrays(
     neigh_count: ndarray_1d_int) -> (ndarray_1d_int, ndarray_1d_int):
     N = neigh_count.shape[0]
     neigh_offset = ti.ndarray(dtype=dtype_int, shape=(N + 1,))
     tmp = ti.ndarray(dtype=dtype_int, shape=(N + 1,))
-    exclusive_scan_i32(neigh_count, neigh_offset, tmp)
+    exclusive_scan_int(neigh_count, neigh_offset, tmp)
     total = int(neigh_offset.to_numpy()[-1])
     neigh_ids = ti.ndarray(dtype=dtype_int, shape=(total,))
     return neigh_ids, neigh_offset
