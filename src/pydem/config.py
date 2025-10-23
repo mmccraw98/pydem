@@ -7,7 +7,7 @@ ti.init(arch=arch)
 print("taichi:", ti.__version__)
 
 # Define common types
-dtype_float = ti.f32
+dtype_float = ti.float32
 dtype_int = ti.int32
 
 vec2_int = ti.types.vector(2, dtype_int)

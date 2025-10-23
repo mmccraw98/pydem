@@ -3,10 +3,13 @@ import numpy as np
 from .config import vec2_float, dtype_float, vec2_int
 from .neighbors import build_neighbors_naive
 from .box import dist_pbc
+from .potential import soft_disk
+from .core import compute_forces
 
 if __name__ == "__main__":
-    N = 100
+    N = 1000
     phi = 0.5
+    e_c = 1.0
 
     radii_np = np.ones(N, dtype=np.float32) * 0.5
     radii_np[N // 2:] *= 1.4
@@ -22,4 +25,13 @@ if __name__ == "__main__":
     pos.from_numpy(pos_np)
 
     neigh_ids, neigh_offset = build_neighbors_naive(pos, 1.0, dist_pbc, box_size)
+
+    force = ti.ndarray(dtype=vec2_float, shape=(N,))
+    force.fill(0)
+    pe = ti.ndarray(dtype=dtype_float, shape=(N,))
+    pe.fill(0)
+
+    compute_forces(pos, force, pe, radii, neigh_ids, neigh_offset, dist_pbc, box_size, soft_disk, e_c)
+    
+    print(np.sum(force.to_numpy(), axis=0))
 
