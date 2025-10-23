@@ -43,12 +43,12 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mmccraw98/pydpmd"
-Repository = "https://github.com/mmccraw98/pydpmd"
-Issues = "https://github.com/mmccraw98/pydpmd/issues"
+Homepage = "https://github.com/mmccraw98/pydem"
+Repository = "https://github.com/mmccraw98/pydem"
+Issues = "https://github.com/mmccraw98/pydem/issues"
 
 [tool.hatch.version]
-path = "src/pydpmd/__init__.py"
+path = "src/pydem/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 exclude = [
@@ -58,7 +58,7 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pydpmd"]
+packages = ["src/pydem"]
 
 # Development tools configuration
 [tool.black]
@@ -82,4 +82,4 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=pydpmd --cov-report=html --cov-report=term-missing"
+addopts = "--cov=pydem --cov-report=html --cov-report=term-missing"
