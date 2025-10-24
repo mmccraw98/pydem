@@ -4,101 +4,9 @@ from .config import ndarray_1d_float, ndarray_2d_float, vec2_float, dtype_float,
 from .neighbors import build_neighbors_naive
 from .box import dist_pbc
 from .potential import soft_disk
-from .core import compute_forces
-
-@ti.kernel
-def update_velocities(
-    vel: ndarray_2d_float,
-    force: ndarray_2d_float,
-    mass: ndarray_1d_float,
-    dt: float):
-    N = vel.shape[0]
-    for i in range(N):
-        vel[i] += force[i] * dt / (2 * mass[i])
-
-@ti.kernel
-def update_positions(
-    pos: ndarray_2d_float,
-    last_pos: ndarray_2d_float,
-    vel: ndarray_2d_float,
-    disp_sq: ndarray_1d_float,
-    dt: float):
-    N = vel.shape[0]
-    for i in range(N):
-        pos[i] += vel[i] * dt
-        disp_vec = pos[i] - last_pos[i]
-        disp_sq[i] = disp_vec.dot(disp_vec)
-
-flag = ti.field(dtype=dtype_int, shape=())
-
-@ti.kernel
-def any_exceeds(a: ndarray_1d_float, thresh: float, out: ti.template()):
-    out[None] = 0
-    N = ti.cast(a.shape[0], ti.int32)
-    for i in range(N):
-        if a[i] > thresh:
-            ti.atomic_max(out[None], 1)
-
-@ti.kernel
-def reduce_sum_vel(vel: ndarray_2d_float, out: ti.template()):
-    out[None] = ti.Vector.zero(dtype_float, 2)
-    N = ti.cast(vel.shape[0], ti.int32)
-    for i in range(N):
-        out[None] += vel[i]
-
-@ti.kernel
-def subtract_mean(vel: ndarray_2d_float, mean: vec2_float):
-    N = ti.cast(vel.shape[0], ti.int32)
-    for i in range(N):
-        vel[i] = vel[i] - mean
-
-@ti.kernel
-def reduce_ke_sum(vel: ndarray_2d_float, mass: ndarray_1d_float, out: ti.template()):
-    out[None] = ti.cast(0.0, dtype_float)
-    N = ti.cast(vel.shape[0], ti.int32)
-    for i in range(N):
-        v = vel[i]
-        out[None] += 0.5 * mass[i] * v.dot(v)
-
-@ti.kernel
-def scale_velocities(vel: ndarray_2d_float, s: dtype_float):
-    N = ti.cast(vel.shape[0], ti.int32)
-    for i in range(N):
-        vel[i] = vel[i] * s
-
-@ti.kernel
-def compute_ke(
-    vel: ndarray_2d_float,
-    mass: ndarray_1d_float,
-    ke: ndarray_1d_float):
-    N = vel.shape[0]
-    for i in range(N):
-        v = vel[i]
-        ke[i] = 0.5 * mass[i] * v.dot(v)
-
-def compute_temperature(vel: ndarray_2d_float,
-                        mass: ndarray_1d_float) -> float:
-    ke_sum = ti.field(dtype=dtype_float, shape=())
-    reduce_ke_sum(vel, mass, ke_sum)
-    N = vel.shape[0]
-    dof = 2 * N  # in 2D; adjust to 2*N - 2 if you remove COM below
-    return float(2.0 * ke_sum[None] / dof)
-
-def scale_to_temperature(T: float,
-                         vel: ndarray_2d_float,
-                         mass: ndarray_1d_float):
-    v_sum = ti.Vector.field(2, dtype=dtype_float, shape=())
-    reduce_sum_vel(vel, v_sum)
-    N = vel.shape[0]
-    mean = v_sum[None] / N
-    subtract_mean(vel, mean)
-
-    ke_sum = ti.field(dtype=dtype_float, shape=())
-    reduce_ke_sum(vel, mass, ke_sum)
-    dof = 2 * N  # use 2*N - 2 if COM is constrained
-    KE_target = 0.5 * dof * T
-    s = (KE_target / float(ke_sum[None])) ** 0.5
-    scale_velocities(vel, s)
+from .core import compute_forces, scale_to_temperature
+from .general import any_exceeds
+from .integrator import update_positions, update_velocities
 
 if __name__ == "__main__":
     N = 1000
@@ -142,6 +50,7 @@ if __name__ == "__main__":
     verlet_rad = (1 + verlet_skin) * 2 * np.max(radii_np)
     verlet_thresh_sq = (verlet_skin / 2.0) ** 2
     neigh_ids, neigh_offset = build_neighbors_naive(pos, verlet_rad, dist_pbc, box_size)
+    flag = ti.field(dtype=dtype_int, shape=())
     last_pos.copy_from(pos)
     disp_sq.fill(0)
 

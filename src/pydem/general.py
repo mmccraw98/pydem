@@ -1,5 +1,5 @@
 import taichi as ti
-from .config import dtype_int, ndarray_1d_int
+from .config import dtype_int, ndarray_1d_int, ndarray_1d_float
 
 @ti.kernel
 def sum1d_int(
@@ -34,3 +34,11 @@ def exclusive_scan_int(
             out[i] = prev
             prev = cur
         out[n] = prev
+
+@ti.kernel
+def any_exceeds(a: ndarray_1d_float, thresh: float, out: ti.template()):
+    out[None] = 0
+    N = ti.cast(a.shape[0], ti.int32)
+    for i in range(N):
+        if a[i] > thresh:
+            ti.atomic_max(out[None], 1)
