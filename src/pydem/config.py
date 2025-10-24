@@ -3,16 +3,16 @@ import numpy as np
 import platform
 
 # Select backend
-# ti.init(arch=ti.metal)
+ti.init(arch=ti.metal)
 # ti.init(arch=ti.cuda)
-ti.init(arch=ti.cpu)
+# ti.init(arch=ti.cpu)
 print("taichi:", ti.__version__)
 
 # Define common types
 dtype_int = ti.int32
 dtype_int_np = np.int32
 
-prec = 64
+prec = 32
 if prec == 32:
     dtype_float = ti.float32
     dtype_float_np = np.float32
